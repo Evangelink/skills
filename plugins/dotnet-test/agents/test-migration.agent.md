@@ -56,8 +56,8 @@ Use the `platform-detection` reference skill logic to identify the test framewor
 
 1. Read `.csproj` files, `Directory.Build.props`, `Directory.Packages.props`, and `global.json`
 2. Identify the framework from package references:
-   - `MSTest`, `MSTest.TestFramework`, `MSTest.TestAdapter`, or `MSTest.Sdk` → **MSTest**
-   - `xunit`, `xunit.v3` → **xUnit**
+   - `MSTest` (metapackage), `<Sdk Name="MSTest.Sdk">`, or the combination of `MSTest.TestFramework` + `MSTest.TestAdapter` → **MSTest**
+   - `xunit`, `xunit.v3`, `xunit.v3.mtp-v1`, `xunit.v3.mtp-v2`, `xunit.v3.core.mtp-v1`, or `xunit.v3.core.mtp-v2` → **xUnit**
    - `NUnit` + `NUnit3TestAdapter` → **NUnit**
    - `TUnit` → **TUnit**
 3. Determine the version from the package version number:
