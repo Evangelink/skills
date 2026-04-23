@@ -1,6 +1,7 @@
 ---
 name: dotnet-test-frameworks
-description: "Reference data for .NET test framework detection patterns, assertion APIs, skip annotations, setup/teardown methods, and common test smell indicators across MSTest, xUnit, NUnit, and TUnit. Use when identifying test frameworks, mapping assertion equivalents across MSTest/xUnit/NUnit/TUnit, converting lifecycle or setup/teardown methods between frameworks, looking up skip/ignore attributes, replacing try-catch with framework-native exception assertions, or identifying integration test markers and code patterns. Also loaded by test analysis skills (test-anti-patterns, exp-test-smell-detection, exp-assertion-quality, exp-test-maintainability, exp-test-tagging) as framework-specific lookup tables."
+description: "Reference data for .NET test framework detection patterns, assertion APIs, skip annotations, setup/teardown methods, and common test smell indicators across MSTest, xUnit, NUnit, and TUnit. Loaded by test analysis skills (test-anti-patterns) as framework-specific lookup tables."
+user-invocable: false
 license: MIT
 ---
 
