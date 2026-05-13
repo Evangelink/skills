@@ -9,9 +9,10 @@ description: >-
   tests that compile, pass, and follow project conventions.
   DO NOT USE FOR: running existing tests, executing dotnet test, applying
   test filters, detecting test platforms, or troubleshooting test execution
-  (use run-tests); diagnosing coverage plateaus or CRAP score computation
-  (use coverage-analysis); MSTest-specific assertion guidance or fixing
-  existing MSTest test code (use writing-mstest-tests).
+  (use run-tests); diagnosing coverage plateaus or project-wide
+  coverage/CRAP analysis (use coverage-analysis); targeted method/class/file
+  CRAP score requests (use crap-score); MSTest-specific assertion guidance
+  or fixing existing MSTest test code (use writing-mstest-tests).
 license: MIT
 ---
 
