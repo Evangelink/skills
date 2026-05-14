@@ -65,6 +65,8 @@ No pre-existing runsettings files or manually installed tools required.
 
 ## Workflow
 
+> **User-visible output is mandatory.** Never end the session after running scripts or report tooling without producing a final summary to the user. If a phase fails, times out, or budget is running low, skip remaining optional work and immediately return a partial report containing: (1) what was found in the Cobertura XML, (2) any CRAP/risk-hotspot data already extracted, (3) which methods are blocking coverage, and (4) failures encountered. ReportGenerator HTML output is optional — prioritize the CRAP/risk-hotspot table and the user-facing summary over HTML reports if budget is constrained.
+
 If the user provides a path to existing Cobertura XML (or coverage data is already present in `TestResults/`), skip Steps 3–4 (test execution and provider detection) but **still run Steps 5–6** (ReportGenerator and CRAP score computation). The Risk Hotspots table and CRAP scores are mandatory in every output — they are the skill's core value-add over raw coverage numbers.
 
 The workflow runs in four phases. Phases 2 and 3 each contain steps that can run in parallel to reduce total wall-clock time.

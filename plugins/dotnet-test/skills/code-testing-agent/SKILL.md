@@ -1,18 +1,19 @@
 ---
 name: code-testing-agent
 description: >-
-  Generates comprehensive, workable unit tests for any programming language
-  using a multi-agent pipeline. Use when asked to generate tests, write unit
-  tests, improve test coverage, add test coverage, or create test files.
-  Supports C#, TypeScript, JavaScript, Python, Go, Rust, Java, and more.
-  Orchestrates research, planning, and implementation phases to produce
-  tests that compile, pass, and follow project conventions.
-  DO NOT USE FOR: running existing tests, executing dotnet test, applying
-  test filters, detecting test platforms, or troubleshooting test execution
+  Generates and writes new unit tests for any programming language using a
+  Research-Plan-Implement pipeline. Use when user says "generate tests",
+  "write unit tests", "add tests", "improve test coverage", "create test
+  project", "achieve high coverage", "comprehensive tests", or asks to
+  scaffold a new test project for an app, service, or library. Supports
+  C#, TypeScript, JavaScript, Python, Go, Rust, Java, and more. Orchestrates
+  the code-testing-generator sub-agent through research, planning, and
+  implementation phases so tests compile, pass, and follow project
+  conventions. DO NOT USE FOR: running existing tests or test filters
   (use run-tests); diagnosing coverage plateaus or project-wide
-  coverage/CRAP analysis (use coverage-analysis); targeted method/class/file
-  CRAP score requests (use crap-score); MSTest-specific assertion guidance
-  or fixing existing MSTest test code (use writing-mstest-tests).
+  coverage/CRAP analysis without writing tests (use coverage-analysis);
+  targeted method/class CRAP scores (use crap-score); MSTest assertion
+  guidance or fixing existing MSTest test code (use writing-mstest-tests).
 license: MIT
 ---
 

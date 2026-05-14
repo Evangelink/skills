@@ -7,10 +7,16 @@ stimuli:
   - name: Generate tests for ContosoUniversity ASP.NET Core MVC app
     prompt: |
       I have an ASP.NET Core MVC application under ContosoUniversity/ — a university
-      enrollment system with multiple controllers, EF Core data access, and services.
+      enrollment system with multiple controllers, EF Core data access, and a
+      notification service. This is a project-wide, multi-file test generation task.
 
-      Generate comprehensive unit tests for this application that achieve high code coverage.
-      The tests should compile and pass.
+      Please scaffold a new test project, then write comprehensive unit tests
+      across the controllers (Students, Courses, Departments, Instructors), the
+      services, and the data layer. Achieve high code coverage. The generated
+      tests should compile and pass, and the test project should be configured so
+      `dotnet test --collect:"XPlat Code Coverage"` produces a Cobertura XML
+      report under TestResults/ (add `coverlet.collector` to the test csproj if
+      it is not already there).
     environment:
       files:
         - src: .
