@@ -53,7 +53,7 @@ Use this skill when the user mentions test coverage, coverage gaps, code risk, C
 
 - .NET SDK installed (`dotnet` on PATH)
 - At least one test project referencing the production code (xUnit, NUnit, or MSTest)
-- Internet access for `dotnet tool install` (ReportGenerator) on first run, or ReportGenerator already installed globally
+- **Optional:** internet access for `dotnet tool install` (ReportGenerator). Core CRAP/coverage analysis works from Cobertura XML alone — ReportGenerator only adds HTML/CSV reports as an optional post-summary extra.
 
 The skill auto-detects coverage provider state per test project and selects the least-invasive execution strategy:
 
@@ -65,11 +65,13 @@ No pre-existing runsettings files or manually installed tools required.
 
 ## Workflow
 
-> **User-visible output is mandatory.** Never end the session after running scripts or report tooling without producing a final summary to the user. If a phase fails, times out, or budget is running low, skip remaining optional work and immediately return a partial report containing: (1) what was found in the Cobertura XML, (2) any CRAP/risk-hotspot data already extracted, (3) which methods are blocking coverage, and (4) failures encountered. ReportGenerator HTML output is optional — prioritize the CRAP/risk-hotspot table and the user-facing summary over HTML reports if budget is constrained.
+> **MANDATORY: deliver the final assistant response with the CRAP/risk-hotspot summary BEFORE any optional work.** As soon as `Compute-CrapScores.ps1` and `Extract-MethodCoverage.ps1` return data, your **next** assistant response must contain the user-facing analysis (CRAP table, blocking methods, recommendations). Do not run ReportGenerator (Phase 5), do not install global tools, and do not start any heavy parallel work before that response is delivered. The user is judged on the final assistant message, not on side-effect files.
+>
+> If a phase fails, times out, or budget is running low, skip remaining optional work and immediately return a partial summary containing: (1) what was found in the Cobertura XML, (2) any CRAP/risk-hotspot data already extracted, (3) which methods are blocking coverage, and (4) failures encountered.
 
-If the user provides a path to existing Cobertura XML (or coverage data is already present in `TestResults/`), skip Steps 3–4 (test execution and provider detection) but **still run Steps 5–6** (ReportGenerator and CRAP score computation). The Risk Hotspots table and CRAP scores are mandatory in every output — they are the skill's core value-add over raw coverage numbers.
+If the user provides a path to existing Cobertura XML (or coverage data is already present in `TestResults/`), **skip Phase 2 entirely** (no test execution) **and skip Phase 5 by default** (no ReportGenerator install or HTML report) — go directly from Phase 3 (analysis scripts) to Phase 4 (user-facing summary). Only run Phase 5 if the user explicitly asks for HTML/CSV reports. The Risk Hotspots table and CRAP scores are mandatory in every output — they are the skill's core value-add over raw coverage numbers.
 
-The workflow runs in four phases. Phases 2 and 3 each contain steps that can run in parallel to reduce total wall-clock time.
+The workflow runs in five phases. Phases 1–4 are required; Phase 5 (ReportGenerator HTML/CSV reports) is strictly optional and runs **after** the user-facing summary has been delivered. Do not parallelize Phase 5 with earlier phases — the heavy `dotnet tool install` for ReportGenerator can crash the session before Phase 4 completes.
 
 ### Phase 1 — Setup (sequential)
 
@@ -197,9 +199,9 @@ if ($gitRoot) {
 }
 ```
 
-### Phase 2 — Data collection (Steps 3 and 4 run in parallel)
+### Phase 2 — Test execution (skip when Cobertura XML already exists)
 
-Steps 3 and 4 are independent — start both simultaneously. `dotnet test` is the slowest step, and ReportGenerator setup doesn't need coverage files, so running them concurrently cuts wall time significantly.
+Run only when no Cobertura XML is present. If the user already has coverage data, skip directly to Phase 3.
 
 #### Step 3: Detect coverage provider and run `dotnet test` with coverage collection
 
@@ -360,7 +362,67 @@ If `COBERTURA_COUNT` is 0:
 - If `VS_BINARY_COVERAGE` > 0: warn the user — *"Found .coverage files (VS binary format) but no Cobertura XML. These were likely produced by Visual Studio's built-in collector, which outputs a binary format by default. This skill needs Cobertura XML. Re-running with the detected provider configured for Cobertura output."* Then re-run the appropriate `dotnet test` command above (Coverlet or Microsoft CodeCoverage) with Cobertura format.
 - If no `.coverage` files either: stop and report — *"Coverage files not generated. Ensure `dotnet test` completed successfully and check the build output for errors."*
 
-#### Step 4: Verify or install ReportGenerator (parallel with Step 3)
+### Phase 3 — Analysis (sequential)
+
+Run the two bundled PowerShell scripts. Both are cheap and complete in seconds. **Do not** install or invoke ReportGenerator here — that belongs in optional Phase 5, after the user-facing summary has been delivered.
+
+#### Step 4: Calculate CRAP scores using the bundled script
+
+Run `scripts/Compute-CrapScores.ps1` (co-located with this SKILL.md). It reads all Cobertura XML files, applies `CRAP(m) = comp² × (1 − cov)³ + comp` per method, and returns the top-N hotspots as JSON.
+
+To locate the script: find the directory containing this skill's `SKILL.md` file (the skill loader provides this context), then resolve `scripts/Compute-CrapScores.ps1` relative to it. If the script path cannot be determined, calculate CRAP scores inline using the formula below.
+
+```powershell
+& "<skill-directory>/scripts/Compute-CrapScores.ps1" `
+    -CoberturaPath @(<all COBERTURA file paths as array>) `
+    -CrapThreshold <crap_threshold> `
+    -TopN <top_n>
+```
+
+Script outputs: `TOTAL_METHODS:<n>`, `FLAGGED_METHODS:<n>`, `HOTSPOTS:<json>` (top-N sorted by CrapScore descending).
+
+#### Step 5: Extract per-method coverage gaps
+
+Run `scripts/Extract-MethodCoverage.ps1` to get per-method coverage data for the Coverage Gaps table:
+
+```powershell
+& "<skill-directory>/scripts/Extract-MethodCoverage.ps1" `
+    -CoberturaPath @(<all COBERTURA file paths as array>) `
+    -CoverageThreshold <line_threshold> `
+    -BranchThreshold <branch_threshold> `
+    -Filter below-threshold
+```
+
+Script outputs: JSON array of methods below the coverage threshold, sorted by coverage ascending. Use this data to populate the Coverage Gaps by File table in the report.
+
+### Phase 4 — User-facing summary (MANDATORY — your next assistant response)
+
+As soon as Phase 3 completes, **your immediately next assistant response must contain the user-facing analysis** — do not interleave any other tool calls before it. This is the response the user (and any judge) sees. Skipping or deferring this in favor of Phase 5 (ReportGenerator) is a hard failure.
+
+The response must include, at minimum:
+
+1. Overall line and branch coverage (parsed from the Cobertura XML root `line-rate` / `branch-rate`)
+2. The Risk Hotspots table built from `Compute-CrapScores.ps1` output (CRAP scores, complexity, coverage)
+3. Identification of the highest-risk method(s) and what is blocking coverage
+4. 1–3 prioritized, specific recommendations (which method to test, expected CRAP/coverage impact)
+
+Use `references/output-format.md` verbatim for fixed headings, table structures, symbols, and emoji. Use `references/guidelines.md` for prioritization rules and style.
+
+If Phase 5 has not yet run when you compose this summary, mark the `## 📁 Reports` section's HTML/Text/CSV/GitHub-markdown rows as `Not generated (optional — request HTML reports to enable)`. Only the `coverage-analysis.md` and raw Cobertura paths are guaranteed to exist.
+
+After delivering the response, also save the same content to `TestResults/coverage-analysis/coverage-analysis.md` (use the editor's create/edit tool — do not shell out). Saving the file is secondary and must not delay the assistant response. In editor-hosted environments, open the file after writing it; in CLI, print the absolute path. Do not ask for confirmation.
+
+### Phase 5 — Optional: ReportGenerator HTML/CSV reports (post-summary)
+
+Phase 5 is **strictly optional** and runs **only after** Phase 4 has been delivered. Skip Phase 5 entirely when:
+
+- The user supplied existing Cobertura XML and only asked for analysis (the default for the existing-data path).
+- The user is diagnosing a coverage plateau or asking "what's blocking me?" — they want the answer, not a static-site report.
+- ReportGenerator is not already installed and you have no clear signal the user wants HTML reports.
+
+Run Phase 5 only when the user explicitly asks for HTML/CSV reports, or when the project flow requires them (e.g., a CI artifact upload step).
+
+#### Step 6: Verify or install ReportGenerator (only if running Phase 5)
 
 ```powershell
 $rgAvailable = $false
@@ -389,13 +451,9 @@ if ($rgCommand) {
 Write-Host "RG_AVAILABLE:$rgAvailable"
 ```
 
-If installation fails (no internet), keep `RG_AVAILABLE:false` and continue with raw Cobertura XML parsing + script-based analysis in Step 6. Skip HTML/Text/CSV report generation in Step 5 and note this in the output.
+If installation fails (no internet), keep `RG_AVAILABLE:false`, leave the existing user-facing summary as the final output, and note that HTML reports were skipped.
 
-### Phase 3 — Analysis (Steps 5 and 6 run in parallel)
-
-Once Phase 2 completes (coverage files available, ReportGenerator ready), start Steps 5 and 6 simultaneously — both read from the same Cobertura XML and produce independent outputs.
-
-#### Step 5: Generate reports with ReportGenerator (parallel with Step 6)
+#### Step 7: Generate HTML/CSV reports
 
 ```powershell
 $reportsDir = Join-Path "<COVERAGE_DIR>" "reports"
@@ -413,60 +471,21 @@ if ($rgAvailable) {
 }
 ```
 
-#### Step 6: Calculate CRAP scores using the bundled script (parallel with Step 5)
-
-Run `scripts/Compute-CrapScores.ps1` (co-located with this SKILL.md). It reads all Cobertura XML files, applies `CRAP(m) = comp² × (1 − cov)³ + comp` per method, and returns the top-N hotspots as JSON.
-
-To locate the script: find the directory containing this skill's `SKILL.md` file (the skill loader provides this context), then resolve `scripts/Compute-CrapScores.ps1` relative to it. If the script path cannot be determined, calculate CRAP scores inline using the formula below.
-
-```powershell
-& "<skill-directory>/scripts/Compute-CrapScores.ps1" `
-    -CoberturaPath @(<all COBERTURA file paths as array>) `
-    -CrapThreshold <crap_threshold> `
-    -TopN <top_n>
-```
-
-Script outputs: `TOTAL_METHODS:<n>`, `FLAGGED_METHODS:<n>`, `HOTSPOTS:<json>` (top-N sorted by CrapScore descending).
-
-Also run `scripts/Extract-MethodCoverage.ps1` to get per-method coverage data for the Coverage Gaps table:
-
-```powershell
-& "<skill-directory>/scripts/Extract-MethodCoverage.ps1" `
-    -CoberturaPath @(<all COBERTURA file paths as array>) `
-    -CoverageThreshold <line_threshold> `
-    -BranchThreshold <branch_threshold> `
-    -Filter below-threshold
-```
-
-Script outputs: JSON array of methods below the coverage threshold, sorted by coverage ascending. Use this data to populate the Coverage Gaps by File table in the report.
-
-### Phase 4 — Output (sequential)
-
-#### Step 7: Build the output report
-
-Compose the analysis and save it to `TestResults/coverage-analysis/coverage-analysis.md` under the test project directory. Print the full report to the console.
-
-After saving the file, automatically open `TestResults/coverage-analysis/coverage-analysis.md` in the editor so the user can review it immediately.
-
-- In editor-hosted environments (VS Code, Visual Studio, or other IDE hosts): open the file in the current host session/editor context after writing it.
-- Do not launch a different app instance via hardcoded shell commands (for example `code`, `start`, or platform-specific open commands) unless the host has no native open-file mechanism.
-- In CLI or non-editor environments: print the absolute report path and clearly state that the file was generated.
-
-Do not ask for confirmation before opening the report file.
-
-Use `references/output-format.md` verbatim for all fixed headings, table structures, symbols, and emoji in the generated report. Use `references/guidelines.md` for execution constraints, prioritization rules, and style.
+After Phase 5 completes successfully, you may follow up with a short message pointing the user to the generated HTML report (one paragraph, no need to repeat the summary).
 
 ## Validation
 
-- Verify that at least one `coverage.cobertura.xml` file was generated after `dotnet test`
+- Verify that at least one `coverage.cobertura.xml` file was generated after `dotnet test` (or already exists when the user supplied one)
+- Confirm the assistant response contained the CRAP/risk-hotspot table — saving the markdown file is secondary
 - Confirm `TestResults/coverage-analysis/coverage-analysis.md` was written and contains data
 - Spot-check one method's CRAP score: `comp² × (1 − cov)³ + comp` — a method with 100% coverage should have CRAP = complexity
-- If ReportGenerator ran, verify `TestResults/coverage-analysis/reports/index.html` exists
+- If Phase 5 ran, verify `TestResults/coverage-analysis/reports/index.html` exists; otherwise the report file should mark HTML/Text/CSV rows as `Not generated`
 
 ## Common Pitfalls
 
 - **No Cobertura XML generated** — the test project may lack a coverage provider. The skill auto-adds one, but if `dotnet add package` fails (offline/proxy), coverage collection silently produces nothing. Check for `.coverage` binary files as a fallback indicator.
 - **Test failures (exit code 1)** — coverage is still collected from passing tests. Do not abort; proceed with partial data and note the failures in the summary.
-- **ReportGenerator install failure** — if `dotnet tool install` fails (no internet), skip HTML/CSV report generation and continue with raw Cobertura XML analysis + script-based CRAP scores. Note the skip in the report.
+- **Premature end before user-facing summary** — never start Phase 5 (ReportGenerator install/run) before the Phase 4 assistant response is delivered. The heavy `dotnet tool install` can crash the session or exhaust budget, leaving the user with no analysis even though the CRAP scores were already computed.
+- **ReportGenerator install failure** — if `dotnet tool install` fails (no internet) during Phase 5, leave the existing Phase 4 summary as the final output and note that HTML reports were skipped. Do not retry or block on the install.
 - **Method name mismatches in Cobertura** — async methods, lambdas, and local functions may have compiler-generated names. The scripts use the Cobertura method name/signature directly; verify against source if results look unexpected.
 - **Mixed coverage providers** — when a solution contains both Coverlet and Microsoft CodeCoverage projects, the skill runs per-project to avoid dual-provider conflicts. This is slower but correct.

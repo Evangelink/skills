@@ -75,9 +75,12 @@ Files below the line or branch coverage threshold, ordered by uncovered lines de
 
 | Report | Path |
 |--------|------|
-| HTML (browsable) | `<coverageDir>/reports/index.html` |
-| Text summary | `<coverageDir>/reports/Summary.txt` |
-| GitHub markdown | `<coverageDir>/reports/SummaryGithub.md` |
-| CSV data | `<coverageDir>/reports/Summary.csv` |
-| Raw data | `<coverageDir>/raw/` |
+| Markdown summary (this file) | `<coverageDir>/coverage-analysis.md` |
+| Raw Cobertura XML | `<coverageDir>/raw/` |
+| HTML (browsable) | `<coverageDir>/reports/index.html` *or* `Not generated (optional — request HTML reports to enable)` |
+| Text summary | `<coverageDir>/reports/Summary.txt` *or* `Not generated` |
+| GitHub markdown | `<coverageDir>/reports/SummaryGithub.md` *or* `Not generated` |
+| CSV data | `<coverageDir>/reports/Summary.csv` *or* `Not generated` |
 ```
+
+If ReportGenerator (Phase 5) has not run, mark the HTML/Text/GitHub-markdown/CSV rows as `Not generated (optional — request HTML reports to enable)`. Do not invent paths for files that have not been produced. The Markdown summary and Raw Cobertura XML rows are always populated.
