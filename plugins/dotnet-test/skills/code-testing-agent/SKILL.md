@@ -13,7 +13,8 @@ description: >-
   (use run-tests); diagnosing coverage plateaus or project-wide
   coverage/CRAP analysis without writing tests (use coverage-analysis);
   targeted method/class CRAP scores (use crap-score); MSTest assertion
-  guidance or fixing existing MSTest test code (use writing-mstest-tests).
+  guidance, MSTest test pattern modernization, or fixing existing MSTest test
+  code (use writing-mstest-tests).
 license: MIT
 ---
 
