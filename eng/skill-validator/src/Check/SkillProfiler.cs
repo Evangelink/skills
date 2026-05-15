@@ -42,8 +42,8 @@ public static partial class SkillProfiler
     // TODO: validate this guardrail against literature (skill-routing studies)
     // and run experiments measuring whether large aggregate description footprints
     // actually degrade selection accuracy or just cost more tokens up-front.
-    // Until then, keep the cap as a soft check and pick a value that doesn't
-    // block reasonable plugin growth (dotnet-test alone is now ~14K with 22 skills).
+    // Until then, keep the cap aligned with current enforcement as a hard
+    // validation failure, while leaving enough headroom for reasonable plugin growth.
     internal const int MaxAggregateDescriptionLength = 20_000;
     private const int MaxNameLength = 64;
     internal const int MinDescriptionLength = 10;
