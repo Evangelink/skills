@@ -31,7 +31,20 @@ public static partial class SkillProfiler
     // Not tied to the configured eval/judge model — TiktokenTokenizer only supports OpenAI
     // vocabularies, but BPE counts are close enough across models for complexity classification.
     private static readonly Lazy<TiktokenTokenizer> s_bpeTokenizer = new(() => TiktokenTokenizer.CreateForModel("gpt-4"));
-    internal const int MaxAggregateDescriptionLength = 15_000;
+
+    // Per-plugin aggregate description size cap. NOTE: this is a local repo
+    // policy, NOT a documented Copilot/agentskills constraint. The agentskills.io
+    // spec defines per-skill description limits (1024 chars) but no aggregate
+    // limit. The original 15,000 was introduced in #238 / discussed in #222
+    // ("15K characters was mentioned, we could choose smaller") as an informal
+    // guardrail against bloated metadata costs at startup.
+    //
+    // TODO: validate this guardrail against literature (skill-routing studies)
+    // and run experiments measuring whether large aggregate description footprints
+    // actually degrade selection accuracy or just cost more tokens up-front.
+    // Until then, keep the cap as a soft check and pick a value that doesn't
+    // block reasonable plugin growth (dotnet-test alone is now ~14K with 22 skills).
+    internal const int MaxAggregateDescriptionLength = 20_000;
     private const int MaxNameLength = 64;
     internal const int MinDescriptionLength = 10;
     private const int MaxCompatibilityLength = 500;
