@@ -112,8 +112,22 @@ jobs:
 
       - name: Find eval specs
         id: find-evals
+        env:
+          DISPATCH_SKILL: ${{ inputs.skill }}
         run: |
-          EVALS=$(find tests/${{ matrix.entry.plugin }} -name "eval.vally.yaml" -type f | sort)
+          # For workflow_dispatch targeting a specific skill, only run that one
+          # eval. Otherwise run every eval discovered under the plugin's tests
+          # directory.
+          if [ -n "$DISPATCH_SKILL" ]; then
+            CANDIDATE="tests/${{ matrix.entry.plugin }}/${DISPATCH_SKILL}/eval.vally.yaml"
+            if [ -f "$CANDIDATE" ]; then
+              EVALS="$CANDIDATE"
+            else
+              EVALS=""
+            fi
+          else
+            EVALS=$(find tests/${{ matrix.entry.plugin }} -name "eval.vally.yaml" -type f | sort)
+          fi
           if [ -z "$EVALS" ]; then
             echo "No eval.vally.yaml files found for ${{ matrix.entry.plugin }}"
             echo "has_evals=false" >> $GITHUB_OUTPUT
@@ -129,7 +143,7 @@ jobs:
           GITHUB_TOKEN: ${{ steps.select-token.outputs.token }}
           RESULTS_DIR: artifacts/TestResults/vally/${{ matrix.entry.name }}
         run: |
-          SKILL_DIR="./${{ matrix.entry.skills_path }}"
+          PLUGIN="${{ matrix.entry.plugin }}"
 
           while IFS= read -r EVAL_SPEC; do
             EVAL_NAME=$(basename $(dirname "$EVAL_SPEC"))
@@ -139,10 +153,29 @@ jobs:
             SKILLED_DIR="$RESULTS_DIR/$EVAL_NAME/skilled"
             mkdir -p "$BASELINE_DIR" "$SKILLED_DIR"
 
-            # Baseline run (no skill)
+            # Each eval targets a single skill named after the eval folder.
+            # Evals that do not map 1:1 to a skill (e.g. `agent.*` evals that
+            # exercise multi-skill orchestrator agents and declare their own
+            # `environment.skills`) are skipped — they are out of scope for
+            # the skill-vs-baseline pipeline.
+            PER_SKILL_DIR="./plugins/$PLUGIN/skills/$EVAL_NAME"
+            if [ ! -f "$PER_SKILL_DIR/SKILL.md" ]; then
+              echo "::warning::Skipping $EVAL_NAME — no SKILL.md at $PER_SKILL_DIR (likely an agent eval; not supported by the skill-isolation pipeline)"
+              echo "::endgroup::"
+              continue
+            fi
+
+            # Empty dir used as `--skill-dir` for the baseline so vally
+            # discovers zero skills. Without this, vally walks up to the repo's
+            # .vally.yaml and loads every skill under plugins/, contaminating
+            # the baseline.
+            EMPTY_SKILL_DIR=$(mktemp -d -t vally-empty-skills-XXXXXX)
+
+            # Baseline run (no skills)
             echo "--- Baseline run ---"
             vally eval \
               --eval-spec "$EVAL_SPEC" \
+              --skill-dir "$EMPTY_SKILL_DIR" \
               --model ${{ env.MODEL }} \
               --runs 1 --workers 3 \
               --skip-validate \
@@ -150,17 +183,19 @@ jobs:
               --output-dir "$BASELINE_DIR" \
               2>&1 || echo "::warning::Baseline eval failed for $EVAL_NAME"
 
-            # Skilled run
+            # Skilled run (exactly the one skill under evaluation)
             echo "--- Skilled run ---"
             vally eval \
               --eval-spec "$EVAL_SPEC" \
-              --skill-dir "$SKILL_DIR" \
+              --skill-dir "$PER_SKILL_DIR" \
               --model ${{ env.MODEL }} \
               --runs 1 --workers 3 \
               --skip-validate \
               --judge-model ${{ env.JUDGE_MODEL }} \
               --output-dir "$SKILLED_DIR" \
               2>&1 || echo "::warning::Skilled eval failed for $EVAL_NAME"
+
+            rm -rf "$EMPTY_SKILL_DIR"
 
             # Adapt results — find JSONL in timestamped subdirs
             BASELINE_JSONL=$(find "$BASELINE_DIR" -name "*.jsonl" -type f 2>/dev/null | head -1)
@@ -172,7 +207,7 @@ jobs:
                 --baseline "$(dirname "$BASELINE_JSONL")" \
                 --skilled "$(dirname "$SKILLED_JSONL")" \
                 --skill-name "$EVAL_NAME" \
-                --skill-path "${{ matrix.entry.skills_path }}" \
+                --skill-path "plugins/$PLUGIN/skills/$EVAL_NAME" \
                 --model "${{ env.MODEL }}" \
                 --judge-model "${{ env.JUDGE_MODEL }}" \
                 --output "$RESULTS_DIR/$EVAL_NAME/results.json"
