@@ -134,6 +134,6 @@ Order fixes by:
 
 ## References
 
-- Academic taxonomy: `https://testsmells.org`
+- Academic taxonomy: <https://testsmells.org>
 - Extended catalog: `references/test-smell-catalog.md`
 - Framework-specific markers and assertion/skip APIs: `dotnet-test-frameworks`
