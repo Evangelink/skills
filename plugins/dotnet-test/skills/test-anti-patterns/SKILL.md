@@ -11,8 +11,10 @@ description: >
   DO NOT USE FOR: writing new tests (use writing-mstest-tests), direct
   MSTest API rewrites or implementation-only fixes such as swapped
   Assert.AreEqual argument order, running tests (use run-tests), migrating
-  between frameworks (use migration skills), deep formal audit based on
-  academic test smell taxonomy (use test-smell-detection).
+  between frameworks (use migration skills), formal test-smell audits,
+  test-smell taxonomy reviews, or prompts that ask to "do a smell audit",
+  "rank smells by severity", or otherwise frame the request around "smell"
+  or "smells" rather than named anti-patterns (use test-smell-detection).
 license: MIT
 ---
 
