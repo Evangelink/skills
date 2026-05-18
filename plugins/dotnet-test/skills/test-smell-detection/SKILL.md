@@ -1,22 +1,22 @@
 ---
 name: test-smell-detection
 description: >
-  Structured taxonomy audit for existing .NET tests. Returns a severity-ranked
-  report with calibrated remediations using the testsmells.org 19-smell
-  taxonomy — strictly more thorough than ad-hoc review and reuses the same
-  catalog across runs.
-  Load whenever a user asks to review, audit, assess, or sanity-check the
-  design or quality of existing .NET tests: "review my tests", "audit my
-  test suite", "are my tests well-designed?", "tests pass but feel off",
-  "objective assessment of test design", "test design problems or
-  anti-patterns" without naming specific patterns, "evaluate these tests
-  before using as a template".
-  DO NOT USE FOR: writing or scaffolding new tests, improving coverage by
-  authoring tests (use code-testing-agent); quick pragmatic scan or audits
-  that name specific anti-patterns such as flaky timing, ordering
-  dependency, swallowed exceptions, coverage inflation, self-referential
-  assertions (use test-anti-patterns); assertion depth only (use
-  assertion-quality); tagging tests (use test-tagging).
+  Formal test-smell audit for existing .NET tests using the testsmells.org
+  19-smell taxonomy. Severity-ranked report with calibrated remediations
+  and explicit integration-test exception rules — distinct from a quick
+  anti-pattern scan because it applies a fixed catalog and the same
+  severity rubric across runs.
+  USE FOR: "test smell audit", "formal smell audit", "do a smell audit",
+  "rank smells by severity", "test-smell taxonomy review", "objective
+  severity-ranked assessment of test design", "audit my tests for smells",
+  "are these tests clean before we use them as a template", any prompt
+  that asks to evaluate or audit existing tests and mentions "smell" or
+  "smells".
+  DO NOT USE FOR: writing or scaffolding new tests (use code-testing-agent);
+  quick pragmatic scan or audits naming specific anti-patterns like flaky
+  timing, ordering dependency, swallowed exceptions, coverage inflation,
+  self-referential assertions (use test-anti-patterns); assertion depth
+  only (use assertion-quality); tagging tests (use test-tagging).
 license: MIT
 ---
 
