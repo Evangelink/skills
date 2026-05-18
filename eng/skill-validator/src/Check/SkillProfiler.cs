@@ -34,10 +34,12 @@ public static partial class SkillProfiler
 
     // Per-plugin aggregate description size cap. NOTE: this is a local repo
     // policy, NOT a documented Copilot/agentskills constraint. The agentskills.io
-    // spec defines per-skill description limits (1024 chars) but no aggregate
-    // limit. The original 15,000 was introduced in #238 / discussed in #222
-    // ("15K characters was mentioned, we could choose smaller") as an informal
-    // guardrail against bloated metadata costs at startup.
+    // specification (https://agentskills.io/specification) defines per-skill
+    // description (1024), compatibility (500), and name (64) limits, but does
+    // NOT define any aggregate per-plugin cap. The original 15,000 was
+    // introduced in #238 / discussed in #222 ("15K characters was mentioned,
+    // we could choose smaller") as an informal guardrail against bloated
+    // metadata costs at startup.
     //
     // TODO: validate this guardrail against literature (skill-routing studies)
     // and run experiments measuring whether large aggregate description footprints
