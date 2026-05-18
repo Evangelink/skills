@@ -1,20 +1,21 @@
 ---
 name: test-smell-detection
 description: >
-  Formal review of existing tests using the testsmells.org taxonomy.
-  USE FOR: review test smells, detect test smells, analyze test code quality,
-  audit test suite for smells, review these tests and tell me if there are any
-  problematic patterns, check my tests for test design problems or
-  anti-patterns, are these tests well-written, give us an objective assessment
-  of our integration tests, recognize clean tests before using them as a
-  template, detect mystery guests, fragile fixtures, test interdependence,
-  sleepy tests, conditional test logic, assertion-free tests, eager tests,
-  sensitive equality, magic number tests, general fixture, ignored tests.
-  DO NOT USE FOR: write new tests, write unit tests for my class, generate a
-  complete MSTest test suite, add tests for a class, improve coverage by
-  authoring tests, or scaffold tests from scratch (use code-testing-generator);
-  quick pragmatic review without formal taxonomy (use test-anti-patterns);
-  assertion-depth analysis only (use assertion-quality).
+  Default skill when a user asks to review, audit, or assess the design or
+  quality of an existing .NET test suite — even if they do not say "smell".
+  Severity-ranked report using the testsmells.org taxonomy with concrete
+  remediations.
+  USE FOR: review my tests, audit my test suite, are my tests well-designed,
+  what's wrong with my tests, tests pass but feel off, objective assessment,
+  evaluate test code quality, check tests before using as a template,
+  generic "test design problems or anti-patterns" without naming specific
+  patterns, review integration tests for smells, recognize clean tests.
+  DO NOT USE FOR: writing or scaffolding new tests, improving coverage by
+  authoring (use code-testing-agent); quick scan for common problems or
+  audits naming specific anti-patterns (flaky timing, ordering dependency,
+  swallowed exceptions, coverage inflation, self-referential assertions)
+  (use test-anti-patterns); assertion depth (use assertion-quality);
+  tagging (use test-tagging).
 license: MIT
 ---
 
