@@ -1,35 +1,32 @@
 ---
 name: test-anti-patterns
 description: >
-  Quick, pragmatic scan of .NET test code for the most impactful anti-patterns
-  that undermine reliability and diagnostic value.
-  USE FOR: quick review of test code for common problems, biggest issues
-  in my tests, audit for .NET test anti-patterns, named anti-pattern
-  catalog scan, flaky tests, fix flakiness, ordering dependency, swallowed
-  exceptions, always-true / self-referential / tautological assertions,
-  missing or no assertions, magic values, duplicate tests, broad exception
-  types, coverage touching, coverage inflation, over-mocking, test coupling.
-  DO NOT USE FOR: writing new tests, swapped Assert.AreEqual argument order,
-  DynamicData rewrites (use writing-mstest-tests); running tests (use
-  run-tests); migrating frameworks (use migration skills); formal,
-  taxonomy-based, or template-fitness reviews, "objective assessment",
-  "are my tests well-designed?", and generic "review my tests" prompts
-  that do not name specific anti-patterns and are not framed as a quick
-  scan (use test-smell-detection).
+  Detection-focused review of .NET test code for anti-patterns that
+  undermine reliability and diagnostic value.
+  USE FOR: audit test quality, review test code, find test anti-patterns,
+  tests pass but don't verify anything, flaky tests, ordering dependency,
+  duplicate tests, magic values, missing/no assertions, swallowed
+  exceptions, always-true assertions, over-mocking, test coupling, coverage
+  touching, coverage inflation.
+  DO NOT USE FOR: writing new tests (use writing-mstest-tests), direct
+  MSTest API rewrites or implementation-only fixes such as swapped
+  Assert.AreEqual argument order, running tests (use run-tests), migrating
+  between frameworks (use migration skills), deep formal audit based on
+  academic test smell taxonomy (use test-smell-detection).
 license: MIT
 ---
 
 # Test Anti-Pattern Detection
 
-Quick, pragmatic analysis of .NET test code for the most impactful anti-patterns that undermine test reliability, maintainability, and diagnostic value.
+Quick, pragmatic analysis of .NET test code for anti-patterns and quality issues that undermine test reliability, maintainability, and diagnostic value.
 
 ## When to Use
 
-- User asks for a **quick** review of test code for **common problems** or the **biggest issues**
-- User asks to **audit for .NET test anti-patterns** (named patterns or the full anti-pattern catalog)
+- User asks to review test quality or find test smells
 - User wants to know why tests are flaky or unreliable
-- User names specific patterns to look for: missing/no assertions, swallowed exceptions, always-true / self-referential assertions, magic values, duplicate tests, ordering dependency, coverage touching, over-mocking
-- User wants a fast pragmatic scan rather than a formal taxonomy-based assessment
+- User asks "are my tests good?" or "what's wrong with my tests?"
+- User requests a test audit or test code review
+- User wants to improve existing test code
 
 ## When Not to Use
 
@@ -40,7 +37,7 @@ Quick, pragmatic analysis of .NET test code for the most impactful anti-patterns
 - User wants to run or execute tests (use `run-tests`)
 - User wants to migrate between test frameworks or versions (use migration skills)
 - User wants to measure code coverage (out of scope)
-- User asks a **generic, broad, or formal** test-suite review without naming specific anti-patterns and without a quick-review framing — e.g. "review my tests", "audit my test suite", "are my tests well-designed?", "give us an objective assessment", "before we use them as a template" (use `test-smell-detection`)
+- User wants a deep formal test smell audit with academic taxonomy and extended catalog (use `test-smell-detection`)
 
 ## Inputs
 
