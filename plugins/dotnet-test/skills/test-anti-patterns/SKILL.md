@@ -3,8 +3,7 @@ name: test-anti-patterns
 description: >
   Detection-focused review of .NET test code for anti-patterns that
   undermine reliability and diagnostic value. Produces a severity-ranked
-  (Critical / Warning / Info) catalog of findings with concrete code-level
-  fixes.
+  catalog of findings with concrete code-level fixes.
   USE FOR: audit test quality, review test code, find test anti-patterns,
   severity-ranked test audit, tests pass but don't verify anything, flaky
   tests, ordering dependency, duplicate tests, magic values, missing/no
