@@ -1268,17 +1268,59 @@ jobs:
 
           $plugins = '${{ needs.discover.outputs.plugins }}' | ConvertFrom-Json
           foreach ($plugin in $plugins) {
-            $artifactDir = "all-results/skill-validator-results-$plugin"
-            $runDir = Get-ChildItem -Path $artifactDir -Directory -ErrorAction SilentlyContinue |
-              Where-Object { $_.Name -match '^\d{8}-\d{6}$' } |
-              Sort-Object Name -Descending |
-              Select-Object -First 1
-            if (-not $runDir) {
+            # A plugin may have been fanned out into multiple shards by the
+            # discover job (artifact names "skill-validator-results-<plugin>--shard-<tag>"),
+            # or it may be a single artifact ("skill-validator-results-<plugin>").
+            # Collect the latest run dir from every matching artifact and
+            # merge their verdicts into a single results.json so the dashboard
+            # records ONE datapoint per plugin per scheduled run.
+            $artifactDirs = @(Get-ChildItem -Path "all-results" -Directory -ErrorAction SilentlyContinue |
+              Where-Object { $_.Name -eq "skill-validator-results-$plugin" -or $_.Name -like "skill-validator-results-$plugin--shard-*" })
+
+            if ($artifactDirs.Count -eq 0) {
               Write-Warning "No run results found for $plugin, skipping"
               continue
             }
 
-            $resultsFile = Join-Path $runDir.FullName "results.json"
+            $resultsFiles = @()
+            foreach ($ad in $artifactDirs) {
+              $runDir = Get-ChildItem -Path $ad.FullName -Directory -ErrorAction SilentlyContinue |
+                Where-Object { $_.Name -match '^\d{8}-\d{6}$' } |
+                Sort-Object Name -Descending |
+                Select-Object -First 1
+              if ($runDir) {
+                $rf = Join-Path $runDir.FullName "results.json"
+                if (Test-Path $rf) { $resultsFiles += $rf }
+              }
+            }
+
+            if ($resultsFiles.Count -eq 0) {
+              Write-Warning "No results.json found in any artifact for $plugin, skipping"
+              continue
+            }
+
+            if ($resultsFiles.Count -eq 1) {
+              $resultsFile = $resultsFiles[0]
+            } else {
+              # Merge shard verdicts into a single synthetic results.json.
+              # Schema: { model, verdicts[], ... }. We concat verdicts arrays
+              # and keep top-level scalars from the first shard.
+              Write-Host "Merging $($resultsFiles.Count) shard results.json files for $plugin"
+              $merged = $null
+              $allVerdicts = [System.Collections.Generic.List[object]]::new()
+              foreach ($rf in ($resultsFiles | Sort-Object)) {
+                $r = Get-Content $rf -Raw | ConvertFrom-Json
+                if ($null -eq $merged) { $merged = $r }
+                if ($r.verdicts) { foreach ($v in $r.verdicts) { $allVerdicts.Add($v) } }
+              }
+              $merged.verdicts = $allVerdicts.ToArray()
+              $mergedDir = "all-results/_merged"
+              New-Item -ItemType Directory -Force -Path $mergedDir | Out-Null
+              $resultsFile = Join-Path $mergedDir "$plugin.results.json"
+              $merged | ConvertTo-Json -Depth 100 | Out-File -FilePath $resultsFile -Encoding utf8
+              Write-Host "  Merged verdict count: $($allVerdicts.Count) -> $resultsFile"
+            }
+
             Write-Host "`n=== Generating benchmark data for: $plugin ==="
             $existingFile = "/tmp/eval-data/data/$plugin.json"
             $params = @{
