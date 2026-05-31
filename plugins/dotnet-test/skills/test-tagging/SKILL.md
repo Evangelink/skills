@@ -1,6 +1,6 @@
 ---
 name: test-tagging
-description: "Analyzes test suites and tags each test with a standardized set of traits (e.g., positive, negative, critical-path, boundary, smoke, regression). Use when the user wants to categorize, audit, or label tests with traits. Do not use for writing new tests, running tests, or migrating test frameworks."
+description: "Analyzes .NET test suites (MSTest/xUnit/NUnit/TUnit) and tags each test with a standardized set of traits (e.g., positive, negative, critical-path, boundary, smoke, regression). Use when the user wants to categorize, audit, or label .NET tests with traits. Do not use for writing new tests, running tests, migrating test frameworks, or non-.NET test code (Python/JS/TS/Go/Java/Rust/Ruby/PHP/Swift/Kotlin) — this skill only handles C#/F#/VB.NET tests."
 license: MIT
 ---
 
