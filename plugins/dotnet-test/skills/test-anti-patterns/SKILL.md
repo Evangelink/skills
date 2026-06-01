@@ -10,7 +10,7 @@ description: >
   tests that pass but verify nothing, no/missing assertions, swallowed exceptions,
   always-true / self-comparing / tautological assertions, broad exception types,
   flakiness (Thread.Sleep, DateTime.Now), ordering dependency, shared static state,
-  reflection coupling, duplicated tests, magic values, coverage inflation.
+  reflection coupling, duplicated tests, magic values, coverage touching, coverage inflation.
   DO NOT USE FOR: writing new tests (use writing-mstest-tests); running tests
   (use run-tests); framework migration (use migration skills); non-.NET
   languages (Python/JS/Go/Java/etc.) — this is .NET-only.
