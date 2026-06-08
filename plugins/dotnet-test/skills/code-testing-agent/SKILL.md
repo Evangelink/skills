@@ -104,6 +104,16 @@ For each file in scope:
 
 For each source file in scope, estimate coverage based on: presence of a matching test file, number of test methods vs. public methods, and whether tests cover only happy paths or also edge/error cases. Use this to prioritize: prefer completely untested files, then partially tested files with complex logic.
 
+**For C# / .NET repos**, before manually pairing source ↔ test files, invoke the
+`find-untested-sources` skill. It parses every `.cs` file with Roslyn (no build,
+no coverage — runs in seconds even on multi-thousand-file repos) and returns a
+deterministic JSON map: `source_to_tests` (which test files reference which
+source), an `untested` list ordered by API surface (declaration count), and a
+`suggested_test_path` derived from `<ProjectReference>` edges. Use its
+`untested` list as your prioritized worklist instead of `find` / `grep` / `glob`
+walks. See [extensions/dotnet.md](extensions/dotnet.md#discovering-untested-files-find-untested-sources)
+for invocation details.
+
 ### 4. Choose a Test Design Strategy
 
 | Existing coverage | Strategy |

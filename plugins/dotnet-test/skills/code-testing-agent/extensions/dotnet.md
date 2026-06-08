@@ -44,6 +44,56 @@ Before writing test code, read the test project's `.csproj` to verify it has `<P
 
 This prevents CS0234 ("namespace not found") and CS0246 ("type not found") errors.
 
+## Discovering Untested Files (`find-untested-sources`)
+
+Before manually walking the repo with `find`/`grep`/`glob` to figure out which
+files have tests, **invoke the `find-untested-sources` skill**. It is a
+parse-only Roslyn static analyzer (no build, no `Compilation`, no coverage —
+seconds on multi-thousand-file repos) that returns a deterministic JSON test
+pairing map for the whole repo.
+
+Use it whenever the request scope is larger than a single named file: full
+project, "improve coverage", "add tests for module X", "what should I test
+next", etc.
+
+### Invocation
+
+Invoke via the `skill` tool with name `find-untested-sources`. The skill's
+SKILL.md tells you how to run its `scripts/Find-UntestedSources.cs` file-based
+app on the repo root; it prints a JSON report to stdout shaped like:
+
+```json
+{
+  "repo": "/abs/path",
+  "elapsed_ms": 8883,
+  "counts": { "source_files": 3036, "test_files": 867, "untested_files": 1852, "paired_files": 1184 },
+  "untested": [
+    { "source": "src/Foo/Bar.cs", "decl_count": 8, "suggested_test_path": "tests/Foo.Tests/Bar/BarTests.cs" }
+  ],
+  "source_to_tests": {
+    "src/Foo/Baz.cs": ["tests/Foo.Tests/BazTests.cs"]
+  }
+}
+```
+
+`untested` is already sorted by `decl_count` (API surface) descending. Pass
+`--top N` to truncate.
+
+### How to use the output
+
+- **Worklist** — drive your test-generation plan from the `untested` list
+  (already ordered by `decl_count` descending). Skip your own discovery walk.
+- **File placement** — write each new test file at `suggested_test_path`. It's
+  derived from real `<ProjectReference>` edges, so it already lives in a test
+  project that compiles against the source.
+- **Weakly paired files** — entries in `source_to_tests` with exactly one
+  referrer are good candidates for additional depth tests.
+- **Sanity check after generating** — re-run after writing tests to confirm
+  each new test file now appears in `source_to_tests` for its target.
+
+This skill is **C#-only**. For other languages, fall back to manual discovery
+or the language's own pairing conventions.
+
 ## Common CS Error Codes
 
 | Error | Meaning | Fix |
