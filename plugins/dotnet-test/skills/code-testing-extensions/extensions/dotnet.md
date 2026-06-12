@@ -63,7 +63,7 @@ This prevents CS0234 ("namespace not found") and CS0246 ("type not found") error
 
 ### Registering a new test project (MANDATORY when `dotnet new` was used)
 
-A new `.csproj` is **invisible** to `dotnet test <solution>`, to `dotnet test` run from the repo root, and to any CI/benchmark harness until it is added to the solution. Run `dotnet sln add` *immediately* after creating the project — do not defer it to "Step 8 cleanup".
+A new `.csproj` is **invisible** to `dotnet test <solution>`, to `dotnet test` run from the repo root, and to any CI/benchmark harness until it is added to the solution. Run `dotnet sln add` *immediately* after creating the project as part of Step 3 ("Register Test Project with Build System") — do not defer it to a later step.
 
 1. Use the exact solution or solution-filter target identified in `.testagent/research.md` or `.testagent/plan.md` — do not search for or substitute a different `.sln`, `.slnx`, or `.slnf` target.
 2. If that target is a `.sln` or `.slnx`, run `dotnet sln <solution> add <test-project.csproj>`.
@@ -71,13 +71,13 @@ A new `.csproj` is **invisible** to `dotnet test <solution>`, to `dotnet test` r
 4. Skip this if the project is already included in the solution or solution filter used for testing.
 5. Prefer the researched test command. If you need to run the solution directly, use `dotnet test --solution <solution>` only for repos on .NET SDK 10+ with MTP-style syntax; otherwise use the standard positional form `dotnet test <solution>`.
 
-## Harness Discovery Check
+### Harness Discovery Check
 
 Before reporting success, run the **harness-equivalent** discovery command from the repo root and confirm the test count went up by at least the number of tests you generated. The harness (CI, msbench, coverage tools) does not know which `.csproj` you targeted — it runs the solution-level command, so a test that passes via `dotnet test MyProject.Tests.csproj` is still worthless if `dotnet test <solution> --list-tests` doesn't enumerate it.
 
 ```bash
 # From repo root, against the solution identified in .testagent/research.md
-dotnet test <solution> --list-tests --no-build 2>&1 | grep -c '^\s\{4\}[A-Za-z]'
+dotnet test <solution> --list-tests --no-build 2>&1 | grep -c '^    [A-Za-z]'
 ```
 
 If the delta is `0`, the new project isn't in the solution. Run `dotnet sln <solution> add <test-project.csproj>` and re-run the check. Do **not** report success until the harness command sees your new tests.

@@ -63,7 +63,7 @@ Before reporting success, run the **harness-equivalent** discovery command from 
 bundle exec rspec --dry-run 2>&1 | grep -E '^[0-9]+ example'
 
 # Minitest (Rails)
-bundle exec rake test 2>/dev/null --dry-run || bin/rails test --list-tests | wc -l
+{ bundle exec rake test --dry-run 2>/dev/null || bin/rails test --list-tests; } | wc -l
 
 # Custom runner (Homebrew, ruby/ruby, etc.)
 # Use the repo's own runner — `./bin/brew tests --list`, `make test-all`, etc.
