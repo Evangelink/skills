@@ -110,9 +110,21 @@ Run tests from the **full workspace scope** with a fresh build (never use `--no-
 - **Environment-dependent** — remove tests that call external URLs, bind ports, or depend on timing. Prefer mocked unit tests.
 - **Pre-existing failures** — note them but don't block.
 
-**Verify tests are implementation-specific:**
+**Verify tests pin down behavior (mandatory pre-completion gate):**
 
-- Each test should assert on **concrete values** returned by the function — not just type checks, non-null checks, or other assertions that would still pass if the function body were empty or returned a default value. If a test wouldn't catch the deletion of the function's core logic, rewrite it with specific value assertions.
+For any non-trivial test addition (≥5 generated tests, or any task whose prompt describes specific behaviors to verify), run a quick self-review pass *before* reporting completion. The two skills below ship in this plugin and are designed exactly for this use case:
+
+1. **Pseudo-mutation check** — invoke the `test-gap-analysis` skill against the source file(s) you tested and the test file(s) you produced. The skill reasons about plausible mutations (boundary flips, dropped null checks, removed exceptions, sign flips) and reports which would slip past your tests. For every gap it flags, either strengthen the existing assertion or add a follow-up test. Re-run until no gap is reported, or until the remaining gaps are explicitly out of scope (e.g., production bugs you cannot fix in a test-only PR).
+
+2. **Assertion-depth check** — invoke the `assertion-quality` skill against the test file(s) you produced. If it flags trivial-only assertions (`IsNotNull` / `toBeDefined` / `assert x is not None`-only tests, tautological round-trip assertions, single-observable tests where the production code touches multiple observables), revise those tests — replace existence checks with concrete-value assertions, and add a secondary observable per behavior-radius guidance.
+
+Skip the gate only for trivially small tasks (1–2 tests, no behavioral complexity). For every other run, the gate is mandatory: a test that passes vacuously — that would still pass if the function body were emptied or returned a default — is a bug, not a test.
+
+Additional self-review heuristics (still required, even when running the skills):
+
+- Each test should assert on **concrete values** returned by the function — not just type checks, non-null checks, or other assertions that would still pass if the function body were empty or returned a default value.
+- Each test should assert on at least one **secondary observable** (related state, log output, neighboring field, retry counter) when the operation under test touches more than just its return value.
+- No test should be tautological — never assert that a value you just wrote can be read back unchanged on an identity/round-trip operation.
 
 ### Step 8: Coverage Gap Iteration
 
@@ -179,5 +191,5 @@ All state is stored in `.testagent/` folder:
 8. **Fix assertions, don't skip tests** — when tests fail, read production code and fix the expected value; never `[Ignore]` or `[Skip]`
 9. **Clean up `.testagent/`** — after pipeline completion, delete the `.testagent/` folder or advise the user to add it to `.gitignore` so ephemeral state is not committed
 10. **Read language extensions first** — always call the `code-testing-extensions` skill and read the relevant extension file before writing any code; it contains critical project registration and build validation steps
-11. **Always validate** — final build, final test, coverage-gap review, and reporting are mandatory for ALL strategies including Direct; never skip final validation
+11. **Always validate** — final build, final test, coverage-gap review, the pre-completion self-review gate from Step 7 (`test-gap-analysis` + `assertion-quality` skills), and reporting are mandatory for ALL strategies including Direct; never skip final validation
 12. **Preserve existing tests** — never delete or overwrite existing test files; create new files or append to existing ones
