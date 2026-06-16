@@ -52,44 +52,15 @@ When the task specifies particular test scenarios or behaviors to cover:
 
 ## Write Tests That Pin Down Behavior
 
-A test that passes coincidentally is worse than no test — it gives a false signal of correctness. Apply these principles to every test you write. They are language-agnostic and apply equally to MSTest, xUnit, NUnit, TUnit, pytest, Jest, Vitest, Go's `testing` package, JUnit, RSpec, GoogleTest, etc.
+A test that passes coincidentally gives a false signal. Beyond covering code, every test must *pin down behavior* — it should fail under a plausible bug. These principles are language-agnostic (MSTest, xUnit, NUnit, pytest, Jest, Go `testing`, JUnit, RSpec, ...):
 
-### 1. Mutation thinking — would the test fail if the code had a plausible bug?
+- **Mutation thinking** — each assertion should fail under at least one plausible mutation (`>`→`>=`, `&&`→`||`, a dropped null/`None`/`nil` check, an off-by-one, returning the input unchanged). If it survives every mutation, replace weak checks (`IsNotNull`/`toBeDefined`) with a concrete expected value.
+- **No tautologies** — never assert that a value you just wrote reads back unchanged; assert on the *transformation* the code performs, not that storage works.
+- **Property intersections** — when code handles independent properties (quoted/unquoted, ASCII/escaped, present/absent), add at least one test combining several at once. Bugs live at intersections, not on single axes.
+- **Behavior radius** — assert on at least one *secondary* observable (related state, log output, neighboring field, retry counter, event), not only the return value.
+- **Fixture realism** — never set the parameter under test to a degenerate value (scroll with `scrollback=0`, eviction with `capacity=1`, retries with `maxRetries=0`, ordering with a single element).
 
-For each assertion, mentally apply a small mutation to the code under test — flip a `>` to `>=`, swap `&&` for `||`, drop a null/`None`/`nil` check, off-by-one a boundary, return the input unchanged instead of transforming it. If the test would still pass under any plausible mutation, the assertion is too weak. Strengthen it with a concrete expected value, or add a second assertion that pins down the contract.
-
-Watch out for **tautological assertions** — asserting that a value you just wrote can be read back unchanged proves only that storage works, not that the code under test produces the right value. Assert on the *transformation* the code is supposed to perform.
-
-### 2. Property intersections, not just coordinate axes
-
-When the code under test handles multiple independent properties (e.g., quoted vs. unquoted input, ASCII vs. escaped characters, present vs. absent fields), write at least one test that exercises **several properties together**, not only one test per property.
-
-Real bugs live at intersections. Three orthogonal tests covering one property each will not catch a bug that only fires when two properties combine. If the parser handles quoting, escaping, and embedded spaces, add a test with a quoted-and-escaped value containing spaces — not only one test per dimension.
-
-### 3. Behavior radius — assert on secondary observables, not only the primary one
-
-For each test, ask: *"what else changes when this operation runs?"* The returned value is the primary observable, but most operations also touch secondary state: history/scrollback buffers, log output, telemetry, related collections, neighboring fields, cursor position, event subscriptions, retry counters, etc. Pick at least one secondary observable per test and assert on it. This catches bugs where the primary output looks right but the side-effect contract is broken.
-
-### 4. Fixture realism
-
-Configure fixtures to match how the code is realistically used, not the bare minimum that makes the test parse. Common anti-patterns to avoid:
-
-- Setting `scrollback=0` when testing scroll behavior (it disables the very thing being exercised)
-- A cache with capacity 1 when testing eviction
-- A single-element collection when testing iteration ordering
-- A 1×1 grid when testing region boundaries
-- A retry policy with `maxRetries=0` when testing retry behavior
-
-If a parameter is what the test is about, **never set it to a degenerate value**.
-
-### 5. Quick self-review before you stop writing the test
-
-Before declaring a test method done, re-read it and check:
-
-- Would deleting the function body cause this test to fail? (If not, assertions are too weak.)
-- Does any assertion check a value that came from the input itself, unchanged? (Tautological assertion — strengthen or remove.)
-- Do similar tests in the same file assert on more dimensions than this one? (If so, match their depth.)
-- Did you assert on at least one secondary observable? (If not, add one.)
+Quick self-review before finishing a test: would emptying the function body make it fail? If not, the assertions are too weak.
 
 ## Parameterization
 

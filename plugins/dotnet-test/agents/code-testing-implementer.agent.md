@@ -65,15 +65,7 @@ These rules apply to every language and override any pattern an existing test fi
 
 #### Test depth (cross-language invariants)
 
-Coverage is necessary but not sufficient — a test that exercises code without verifying its behavior gives false confidence. Every test you write must *pin down behavior* so it would fail under a plausible bug. Apply the principles in the `code-testing-agent` skill's `unit-test-generation.prompt.md` → "Write Tests That Pin Down Behavior" section:
-
-- **Mutation thinking** — each assertion would fail under at least one plausible code mutation (`>` flipped to `>=`, a `null`/`None`/`nil` check removed, an `&&` swapped for `||`, an off-by-one boundary). If the test would still pass under such a mutation, the assertion is too weak — replace `IsNotNull`/`toBeDefined` with a concrete expected value or add a follow-up assertion that pins the contract.
-- **Property intersections** — when the code under test handles multiple independent properties (quoted vs. unquoted, ASCII vs. escaped, present vs. absent), add at least one test that exercises **several properties together**, not only one test per property. Bugs live at intersections.
-- **Behavior radius** — assert on at least one *secondary* observable per test (related state, log output, neighboring fields, history buffer, retry counter, event subscription), not only the primary return value. Bugs where the return looks right but a side-effect contract is broken require this.
-- **Fixture realism** — never set the parameter under test to a degenerate value: don't test scroll with `scrollback=0`, eviction with `capacity=1`, retries with `maxRetries=0`, or iteration ordering with a single-element collection.
-- **Avoid tautological assertions** — never assert that a value you just wrote can be read back unchanged on an identity/round-trip operation; that proves only that storage works, not that the code under test produces the right value. Assert on the *transformation* the code is supposed to perform.
-
-These rules apply to every language and framework. They are not a substitute for the existing rules above (happy/edge/error paths, mock external dependencies) — they are a depth requirement that sits on top of them.
+Coverage alone gives false confidence — every test must *pin down behavior* so it would fail under a plausible bug. Apply the `code-testing-agent` skill's `unit-test-generation.prompt.md` → "Write Tests That Pin Down Behavior" section: mutation thinking (each assertion fails under a plausible mutation), no tautological round-trip assertions, property intersections, at least one secondary observable per test, and realistic (non-degenerate) fixtures. This is a depth requirement on top of the happy/edge/error-path and mocking rules above, and applies to every language.
 
 ### 5. Verify with Build
 
