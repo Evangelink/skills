@@ -50,8 +50,7 @@ stimuli:
         `Find-UntestedSources.cs` helper script was executed) instead of building the source-to-test pairing map
         purely through manual `find` / `grep` / `glob` walks
       - "Before reporting completion, ran the pre-completion self-review gate from Step 7 of code-testing-generator:
-        invoked the `test-gap-analysis` skill against the generated tests and the `assertion-quality` skill against
-        the test files (visible in the trajectory or `.testagent/` notes), and acted on any findings before declaring
+        invoked the `test-gap-analysis` skill against the production source file(s) under test and the generated test file(s), and the `assertion-quality` skill against the generated test file(s) (visible in the trajectory or `.testagent/` notes), and acted on any findings before declaring
         the run finished"
 
   - name: Generate pytest tests for the Flask tasks API (Python polyglot)
