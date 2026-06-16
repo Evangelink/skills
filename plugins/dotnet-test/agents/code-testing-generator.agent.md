@@ -118,7 +118,7 @@ For any non-trivial test addition (≥5 generated tests, or any task whose promp
 
 2. **Assertion-depth check** — invoke the `assertion-quality` skill against the test file(s) you produced. If it flags trivial-only assertions (`IsNotNull` / `toBeDefined` / `assert x is not None`-only tests, tautological round-trip assertions, single-observable tests where the production code touches multiple observables), revise those tests — replace existence checks with concrete-value assertions, and add a secondary observable per behavior-radius guidance.
 
-Skip the gate only for trivially small tasks (1–2 tests, no behavioral complexity). For every other run, the gate is mandatory: a test that passes vacuously — that would still pass if the function body were emptied or returned a default — is a bug, not a test.
+Skip the gate only for trivially small tasks — fewer than 5 generated tests *and* no behaviors specified in the prompt (the exact inverse of the threshold above). For every other run, the gate is mandatory: a test that passes vacuously — that would still pass if the function body were emptied or returned a default — is a bug, not a test.
 
 Additional self-review heuristics (still required, even when running the skills):
 
