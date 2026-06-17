@@ -112,7 +112,7 @@ Run tests from the **full workspace scope** with a fresh build (never use `--no-
 
 **Verify tests pin down behavior (mandatory pre-completion gate):**
 
-For any non-trivial test addition (≥5 generated tests, or any task whose prompt describes specific behaviors to verify), run a quick self-review pass *before* reporting completion. The two skills below ship in this plugin and are designed exactly for this use case:
+For any non-trivial test addition (≥5 generated tests, or any task whose prompt describes specific behaviors to verify), run a quick self-review pass *before* reporting completion — and **after** any Step 8 coverage-gap iteration that adds or modifies tests, so the gate always runs against the final test set. The two skills below ship in this plugin and are designed exactly for this use case:
 
 1. **Pseudo-mutation check** — invoke the `test-gap-analysis` skill against the source file(s) you tested and the test file(s) you produced. The skill reasons about plausible mutations (boundary flips, dropped null checks, removed exceptions, sign flips) and reports which would slip past your tests. For every gap it flags, either strengthen the existing assertion or add a follow-up test. Re-run until no gap is reported, or until the remaining gaps are explicitly out of scope (e.g., production bugs you cannot fix in a test-only PR).
 
@@ -135,6 +135,7 @@ After the previous phases complete, check for uncovered source files:
 3. Identify source files with no corresponding test file.
 4. Generate tests for each uncovered file, build, test, and fix.
 5. Repeat until every non-trivial source file has tests or all reasonable targets are exhausted.
+6. If this step added or modified any tests, re-run the Step 7 pre-completion gate (`test-gap-analysis` + `assertion-quality`) on the new/changed tests before reporting completion — Step 8 output must not bypass the gate.
 
 ### Step 9: Report Results
 
