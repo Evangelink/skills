@@ -37,6 +37,8 @@ Detect the runner from lockfiles/config and prefix all commands accordingly:
 | `hatch.toml` / `[tool.hatch]` in `pyproject.toml` | `hatch run` |
 | None of the above | `python -m` |
 
+`<prefix>` applies to **module execution** only. With the default `python -m` prefix, `<prefix> pytest` expands to `python -m pytest`, but a script entry point or inline probe must not be double-prefixed — `python -m python manage.py …` / `python -m python -c …` is invalid. Run script entry points (`manage.py`, `runtests.py`) and `python -c` probes with `python` directly, wrapping with the env tool when one is detected (e.g. `poetry run python manage.py test …`, `uv run python -c "…"`) instead of `python -m`.
+
 If `Makefile`, `tox.ini`, or `nox` config exists, prefer those scripts over raw commands.
 
 ## Build Commands
@@ -116,9 +118,10 @@ Use the repo's existing lint script first (`make lint`, `tox -e lint`). Otherwis
 
 ## Heavy or Native Dependencies
 
-Before writing tests for a target module, verify it imports cleanly in the same environment and working directory as tests:
+Before writing tests for a target module, verify it imports cleanly in the same environment and working directory as tests. Run the probe under the **same env wrapper as the test command** (`poetry run`, `pdm run`, `uv run`, `pipenv run`, `hatch run`) so the check reflects the real test interpreter/venv — a bare `python` may resolve to a different environment and report a misleading `ok`:
 
 ```powershell
+# Wrap with the detected env tool, e.g. `poetry run python -c "..."`
 python -c "import package.module; print('ok')"
 python -c "from package import module; print('ok')"
 ```
@@ -176,13 +179,13 @@ Never run bare `pip install` in a Poetry/PDM/uv project — it bypasses the lock
 
 ## Finalization: Green Suite or Remove
 
-Before finishing, run the complete set of tests you added with the repo's native invocation.
+Before finishing, run the complete set of tests you added with the repo's native invocation, under the **same env wrapper as the repo's tests** (`poetry run`, `pdm run`, `uv run`, `pipenv run`, `hatch run`). Running the green-suite check in a different interpreter/venv can pass locally yet still fail under the repo's actual runner.
 
 ```powershell
-# Examples; choose the repo-native command discovered above
-python -m pytest tests/path/to/new_tests.py
-python -m unittest path.to.new_test_module
-python manage.py test app_label.tests.test_module
+# Examples; choose the repo-native command/wrapper discovered above
+poetry run python -m pytest tests/path/to/new_tests.py
+uv run python -m unittest path.to.new_test_module
+poetry run python manage.py test app_label.tests.test_module
 ```
 
 If any new test fails or errors after a reasonable fix attempt, delete that test before finishing. Never leave skipped, xfailed, failing, or collection-error tests just to keep more lines. The final submitted suite must be green.
