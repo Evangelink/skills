@@ -479,9 +479,8 @@ scenarios:
     prompt: |
       I upgraded my test project to MSTest v4 and it no longer compiles. I use
       [TestMethod("display name")] and [TestMethodAttribute("display name")] to set custom
-      display names, and those constructors now break because of the CallerInfo constructor
-      changes on TestMethodAttribute. Help me fix this MSTest v4 breaking change -- how
-      should I update them?
+      display names, and those constructors now break. Help me fix this MSTest v4 breaking
+      change -- the CallerInfo constructor on TestMethodAttribute. How should I update them?
     setup:
       files:
         - path: "TestProject.csproj"
@@ -509,8 +508,8 @@ scenarios:
       I upgraded my test project to MSTest v4 and my tests that use Assert.IsInstanceOfType
       with an out parameter no longer compile. I get errors like:
       - CS1615: Argument 2 should not be passed with the 'out' keyword
-      Help me fix this MSTest v4 breaking change -- the Assert.IsInstanceOfType out parameter
-      removal. How do I update these assertions?
+      Help me fix this MSTest v4 breaking change -- the Assert.IsInstanceOfType out parameter removal.
+      How do I update these assertions?
     setup:
       files:
         - path: "TestProject.csproj"
