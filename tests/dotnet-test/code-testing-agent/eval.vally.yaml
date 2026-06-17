@@ -51,8 +51,15 @@ stimuli:
         purely through manual `find` / `grep` / `glob` walks
       - >-
         Before reporting completion, ran the pre-completion self-review gate from Step 7 of code-testing-generator:
-        invoked the `test-gap-analysis` skill against the production source file(s) under test and the generated test file(s), and the `assertion-quality` skill against the generated test file(s) (visible in the trajectory or `.testagent/` notes), and acted on any findings before declaring
-        the run finished
+        invoked the `test-gap-analysis` skill against the production source file(s) under test and the generated test
+        file(s), invoked the `assertion-quality` skill against the generated test file(s) (visible in the trajectory or
+        `.testagent/` notes), and acted on any findings before declaring the run finished
+      - Tests pin down behavior with concrete expected values — minimal use of `Assert.IsNotNull`-only assertions;
+        primary observables (return values, output collections) are checked with `Assert.AreEqual` / specific-content
+        assertions rather than truthy/existence-only checks
+      - At least one test per controller asserts on a secondary observable in addition to the primary return — e.g.,
+        for Create/Edit actions, the test inspects the underlying `SchoolContext` to confirm the entity was persisted
+        (or not, for invalid input) rather than only checking the action's `IActionResult` type
 
   - name: Generate pytest tests for the Flask tasks API (Python polyglot)
     prompt: |
@@ -122,6 +129,12 @@ stimuli:
         due_at), the overdue filter, and pagination boundaries (offset, limit, has_more)
       - Exercises SqliteTaskRepository against an in-memory connection (SqliteTaskRepository.in_memory() or a
         sqlite3.connect(':memory:') fixture), covering at least add/get, update of tags, and delete
+      - Tests pin down behavior with concrete expected values — minimal use of `assert x is not None`-only assertions;
+        tests assert on actual returned `Task` fields (id, title, status, due_at, priority) rather than
+        truthy/existence-only checks
+      - At least one TaskService validation test exercises a *combination* of properties (e.g., over-length title AND
+        invalid priority, or tag normalization on a Task with naive due_at) rather than only single-property tests,
+        exercising property intersections
 
   - name: Generate Vitest tests for the shopping-cart library (TypeScript polyglot)
     prompt: |
@@ -203,3 +216,9 @@ stimuli:
         RegionalTaxCalculator, and WeightBasedShippingCalculator (rejects empty bracket list, out-of-range / negative
         inputs)
       - No real network or filesystem dependencies in the generated tests
+      - Tests pin down behavior with concrete expected values — minimal use of `toBeDefined`/`toBeTruthy`-only
+        assertions; primary observables (totalCents, line item counts, calculated tax, computed shipping) are
+        checked with `toBe(specificNumber)` rather than truthy/existence-only checks
+      - At least one Cart test exercises the *intersection* of multiple pricing dimensions (e.g., a
+        CompositeDiscountPolicy combined with a RegionalTaxCalculator and a WeightBasedShippingCalculator above the
+        threshold) rather than only one dimension at a time, exercising property intersections
