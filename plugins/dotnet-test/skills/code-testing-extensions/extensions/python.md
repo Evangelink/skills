@@ -127,7 +127,7 @@ If a heavy/native dependency such as NumPy, pandas, PyTorch, TensorFlow, cryptog
 
 - Do not write tests that import the failing module
 - Do not spend the budget fighting native build/import failures or installing unrelated packages
-- Scope down to pure-Python submodules that import cleanly, or skip per the Skip section
+- Scope down to a pure-Python submodule that imports cleanly, or omit tests for that module rather than shipping ones that cannot run (see *Finalization: Green Suite or Remove*)
 
 ## Test File Naming
 
