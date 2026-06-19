@@ -151,7 +151,7 @@ The generator picks a strategy based on request scope:
 
 | User Request | Strategy | Why |
 |---|---|---|
-| "Generate tests for `src/services/UserService.ts`" | **Direct** | Single file, small scope — write tests immediately, skip sub-agents (but still run the pre-completion gate before finishing) |
+| "Generate tests for `src/services/UserService.ts`" | **Direct** | Single file, small scope — write tests immediately, skip sub-agents (but still run the generator's Step 7 pre-completion gate — `test-gap-analysis` + `assertion-quality` — before finishing) |
 | "Add unit tests for my billing project" | **Single pass** | Moderate scope — one Research → Plan → Implement cycle covers it |
 | "Achieve 80% coverage across the entire solution" | **Iterative** | Large scope — multiple R→P→I cycles, each narrowing remaining gaps |
 
