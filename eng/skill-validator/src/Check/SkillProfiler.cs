@@ -32,28 +32,38 @@ public static partial class SkillProfiler
     // vocabularies, but BPE counts are close enough across models for complexity classification.
     private static readonly Lazy<TiktokenTokenizer> s_bpeTokenizer = new(() => TiktokenTokenizer.CreateForModel("gpt-4"));
 
-    // Per-plugin aggregate description size cap. NOTE: this is a local repo
-    // policy, NOT a documented Copilot/agentskills constraint. The agentskills.io
-    // specification (https://agentskills.io/specification) defines per-skill
-    // limits — description (1024 chars, #description-field), compatibility
-    // (500 chars, #compatibility-field), and name (64 chars, #name-field) —
-    // but does NOT define any aggregate per-plugin cap. The original 15,000
-    // was introduced in #238 / discussed in #222 ("15K characters was
-    // mentioned, we could choose smaller") as an informal guardrail against
-    // bloated metadata costs at startup.
+    // Per-plugin aggregate description size cap. This mirrors a REAL GitHub
+    // Copilot CLI constraint: the CLI renders the model-facing
+    // <available_skills> list under a hard character budget of 15,000
+    // (the agent SDK's SKILL_CHAR_BUDGET, default 15e3 — confirmed in CLI
+    // 1.0.36 and 1.0.61). Skills are listed alphabetically by name and emitted
+    // WITH their full <description> only until that budget is exhausted; every
+    // skill past the cut-off collapses to a bare name with NO description and
+    // therefore can no longer be reliably model-activated. So once a plugin's
+    // aggregate description footprint approaches ~15K, its alphabetically-later
+    // skills silently lose their descriptions — and their discoverability — in
+    // plugin / marketplace contexts. (This is exactly why dotnet-test's
+    // `run-tests` and `test-*` skills stopped activating in plugin eval runs.)
     //
-    // TODO: validate this guardrail against literature (skill-routing studies)
-    // and run experiments measuring whether large aggregate description footprints
-    // actually degrade selection accuracy or just cost more tokens up-front.
-    // Until then, keep the cap aligned with current enforcement as a hard
-    // validation failure, while leaving enough headroom for reasonable plugin growth.
+    // History / correction: this was previously documented here as "a local
+    // repo policy, NOT a documented Copilot/agentskills constraint" and the cap
+    // was raised 15,000 -> 20,000 -> 22,000 to admit plugin growth. That masked
+    // the silent menu truncation instead of fixing it. The agentskills.io
+    // specification (https://agentskills.io/specification) does only define
+    // per-skill limits — description (1024 chars, #description-field),
+    // compatibility (500 chars, #compatibility-field), name (64 chars,
+    // #name-field) — and no aggregate cap, but the CLI's runtime skill-menu
+    // budget makes 15,000 the effective ceiling regardless.
     //
-    // Raised 20,000 -> 22,000: the dotnet-test plugin (the largest and most
-    // active) reached ~20,400 aggregate chars after adding the
-    // find-untested-sources-polyglot skill, legitimate growth that exceeded the
-    // previous cap. Bumped to restore ~1.6k headroom rather than degrade the
-    // routing keywords of existing skills. Prior precedent: 15,000 -> 20,000.
-    internal const int MaxAggregateDescriptionLength = 22_000;
+    // Notes:
+    //  * The CLI budget is measured over the rendered <skill> blocks
+    //    (name + description + location + markup), which are ~100 chars larger
+    //    per skill than the raw descriptions summed here, so this cap is a
+    //    slightly lenient proxy for the true menu budget.
+    //  * Skills marked `disable-model-invocation: true` are dropped from the
+    //    CLI menu entirely and do not consume the budget; the aggregate below
+    //    excludes them to match.
+    internal const int MaxAggregateDescriptionLength = 15_000;
     private const int MaxNameLength = 64;
     internal const int MinDescriptionLength = 10;
     private const int MaxCompatibilityLength = 500;

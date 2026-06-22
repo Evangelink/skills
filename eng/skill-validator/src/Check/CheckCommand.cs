@@ -1,5 +1,6 @@
 using System.CommandLine;
 using System.Text.Json;
+using System.Text.RegularExpressions;
 using SkillValidator.Shared;
 
 namespace SkillValidator.Check;
@@ -13,6 +14,22 @@ public static class CheckCommand
     private static readonly StringComparer s_pathComparer = OperatingSystem.IsWindows()
         ? StringComparer.OrdinalIgnoreCase
         : StringComparer.Ordinal;
+
+    // A skill with `disable-model-invocation: true` in its frontmatter is
+    // dropped from the Copilot CLI's model-facing skill menu and therefore does
+    // not consume the skill-menu character budget tracked by
+    // SkillProfiler.MaxAggregateDescriptionLength.
+    private static bool IsModelInvocationDisabled(string skillMdContent)
+    {
+        var (yaml, _) = FrontmatterParser.SplitFrontmatter(skillMdContent);
+        if (yaml is null)
+            return false;
+
+        return Regex.IsMatch(
+            yaml,
+            @"(?m)^\s*disable-model-invocation\s*:\s*true\s*(#.*)?$",
+            RegexOptions.IgnoreCase);
+    }
 
     public static Command Create()
     {
@@ -219,7 +236,13 @@ public static class CheckCommand
 
         foreach (var (pluginDirectoryPath, skills) in pluginSkills)
         {
-            int totalChars = skills.Sum(s => s.Description.Length);
+            // Skills hidden from the model-facing skill menu via
+            // `disable-model-invocation: true` do not consume the Copilot CLI's
+            // skill-menu character budget, so they are excluded from the
+            // aggregate (see SkillProfiler.MaxAggregateDescriptionLength).
+            int totalChars = skills
+                .Where(s => !IsModelInvocationDisabled(s.SkillMdContent))
+                .Sum(s => s.Description.Length);
             if (totalChars <= SkillProfiler.MaxAggregateDescriptionLength)
                 continue;
 
