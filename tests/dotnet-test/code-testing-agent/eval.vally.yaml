@@ -76,8 +76,8 @@ stimuli:
       integration tests across the tasks_api package. Achieve high coverage:
       pytest-cov is pre-configured in pyproject.toml with a hard floor of 80%
       line + branch coverage on the tasks_api package. The generated tests
-      should pass with `python -m pip install -e ".[test]"` then
-      `python -m pytest` from the fixtures/python-flask-tasks/ directory,
+      should pass with `python3 -m pip install -e ".[test]"` then
+      `python3 -m pytest` from the fixtures/python-flask-tasks/ directory,
       producing the coverage XML report under
       fixtures/python-flask-tasks/coverage.xml.
     environment:
