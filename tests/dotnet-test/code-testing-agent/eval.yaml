@@ -59,35 +59,22 @@ scenarios:
   - name: "Generate pytest tests for the Flask tasks API (Python polyglot)"
     prompt: |
       I have a Python Flask web application under fixtures/python-flask-tasks/
-      — a tasks REST API with a TaskService layer (with an injected clock and
-      configurable max title length), a TaskRepository Protocol with two
-      backends (InMemoryTaskRepository, SqliteTaskRepository), a separate
-      queries module (TaskQuery / TaskPage / apply_query) for
-      filter/sort/pagination, and a Flask blueprint exposing /tasks CRUD,
-      tag endpoints, and listing with status / tag / q / overdue / sort /
-      order / limit / offset query parameters (see
-      fixtures/python-flask-tasks/README.md for the layout). There are no
-      test files yet — the tests/ directory contains only a .gitkeep
-      marker. This is a project-wide, multi-file test generation task
-      across the service layer, the query layer, both repositories, and
-      the Flask blueprint.
+      — a tasks REST API with a service layer, a repository abstraction with
+      in-memory and SQLite backends, a query/filter/pagination module, and a
+      Flask blueprint exposing the /tasks CRUD, tag, and listing endpoints
+      (see fixtures/python-flask-tasks/README.md for the layout). This is a
+      project-wide, multi-file test generation task. There are no tests yet —
+      the tests/ directory contains only a .gitkeep marker.
 
       Please scaffold a comprehensive pytest test suite under
-      fixtures/python-flask-tasks/tests/, then write comprehensive unit
-      and integration tests across the tasks_api package — covering
-      TaskService (with the repository mocked and the clock injected),
-      the queries.apply_query function over fixed Task lists,
-      InMemoryTaskRepository, SqliteTaskRepository against an in-memory
-      connection, and the Flask blueprint via Flask's test_client.
-
-      Coverage tooling (pytest-cov) is pre-configured in pyproject.toml
-      with a hard floor of 80% line + branch coverage on the tasks_api
-      package. The generated tests should pass with: `python -m pip
-      install -e ".[test]"` then `python -m pytest` from the
-      fixtures/python-flask-tasks/ directory — the run fails (and the
-      coverage XML report under fixtures/python-flask-tasks/coverage.xml
-      is not produced) if your tests do not clear the 80% floor across
-      every module.
+      fixtures/python-flask-tasks/tests/ and write thorough unit and
+      integration tests across the tasks_api package. Achieve high coverage:
+      pytest-cov is pre-configured in pyproject.toml with a hard floor of 80%
+      line + branch coverage on the tasks_api package. The generated tests
+      should pass with `python -m pip install -e ".[test]"` then
+      `python -m pytest` from the fixtures/python-flask-tasks/ directory,
+      producing the coverage XML report under
+      fixtures/python-flask-tasks/coverage.xml.
     setup:
       copy_test_files: true
     assertions:
