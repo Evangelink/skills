@@ -5,7 +5,7 @@ using SkillValidator.Shared;
 
 namespace SkillValidator.Check;
 
-public static class CheckCommand
+public static partial class CheckCommand
 {
     private static readonly StringComparison s_pathComparison = OperatingSystem.IsWindows()
         ? StringComparison.OrdinalIgnoreCase
@@ -19,16 +19,16 @@ public static class CheckCommand
     // dropped from the Copilot CLI's model-facing skill menu and therefore does
     // not consume the skill-menu character budget tracked by
     // SkillProfiler.MaxAggregateDescriptionLength.
+    [GeneratedRegex(@"^\s*disable-model-invocation\s*:\s*true\s*(#.*)?$", RegexOptions.IgnoreCase | RegexOptions.Multiline)]
+    private static partial Regex DisableModelInvocationRegex();
+
     private static bool IsModelInvocationDisabled(string skillMdContent)
     {
         var (yaml, _) = FrontmatterParser.SplitFrontmatter(skillMdContent);
         if (yaml is null)
             return false;
 
-        return Regex.IsMatch(
-            yaml,
-            @"(?m)^\s*disable-model-invocation\s*:\s*true\s*(#.*)?$",
-            RegexOptions.IgnoreCase);
+        return DisableModelInvocationRegex().IsMatch(yaml);
     }
 
     public static Command Create()
