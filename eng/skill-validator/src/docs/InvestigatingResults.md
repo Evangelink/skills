@@ -236,10 +236,14 @@ Several scenario-level options in `eval.yaml` are relevant when diagnosing failu
 >   model-invoked from a user prompt with `disable-model-invocation: true`.
 >   The CLI drops them from the menu entirely, freeing budget for the skills
 >   that should be discoverable. (They remain invocable by explicit name.)
-> - Reduce the plugin's aggregate description footprint so its model-invocable
+> - Reduce the plugin's aggregate skill-menu footprint so its model-invocable
 >   skills fit under the budget. The `check` command enforces this via
->   `SkillProfiler.MaxAggregateDescriptionLength` (15,000), counting only
->   skills *without* `disable-model-invocation: true`.
+>   `SkillProfiler.MaxAggregateDescriptionLength` (15,000), summing each
+>   model-invocable skill's **rendered `<skill>` block** (name + description +
+>   location + markup, via `SkillProfiler.RenderedSkillMenuCost`) — not just the
+>   raw description — and counting only skills *without*
+>   `disable-model-invocation: true`. Counting the rendered block makes passing
+>   `check` a faithful proxy for "fits in the real CLI menu budget".
 > - As a last resort, consolidate overlapping skills so the plugin exposes
 >   fewer model-invocable entries.
 

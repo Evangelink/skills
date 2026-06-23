@@ -229,20 +229,26 @@ public static class CheckCommand
 
         foreach (var (pluginDirectoryPath, skills) in pluginSkills)
         {
+            // Sum each model-invocable skill's RENDERED menu cost — the full
+            // <skill> block the Copilot CLI emits (name + description + location
+            // + markup), via SkillProfiler.RenderedSkillMenuCost — so this
+            // mirrors the real SKILL_CHAR_BUDGET rather than just the raw
+            // description length.
+            //
             // Skills hidden from the model-facing skill menu via
-            // `disable-model-invocation: true` do not consume the Copilot CLI's
-            // skill-menu character budget, so they are excluded from the
-            // aggregate (see SkillProfiler.MaxAggregateDescriptionLength).
+            // `disable-model-invocation: true` do not consume that budget, so
+            // they are excluded from the aggregate (see
+            // SkillProfiler.MaxAggregateDescriptionLength).
             int totalChars = skills
                 .Where(s => !IsModelInvocationDisabled(s.SkillMdContent))
-                .Sum(s => s.Description.Length);
+                .Sum(SkillProfiler.RenderedSkillMenuCost);
             if (totalChars <= SkillProfiler.MaxAggregateDescriptionLength)
                 continue;
 
             var pluginResult = builder.Plugins.FirstOrDefault(p => string.Equals(p.DirectoryPath, pluginDirectoryPath, s_pathComparison));
             var pluginLabel = pluginResult?.Name
                 ?? Path.GetFileName(pluginDirectoryPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            var message = $"Plugin '{pluginLabel}' aggregate description size is {totalChars:N0} characters — maximum is {SkillProfiler.MaxAggregateDescriptionLength:N0}.";
+            var message = $"Plugin '{pluginLabel}' rendered skill-menu size is {totalChars:N0} characters — maximum is {SkillProfiler.MaxAggregateDescriptionLength:N0}.";
             if (pluginResult is not null)
                 pluginResult.Errors.Add(message);
             else
