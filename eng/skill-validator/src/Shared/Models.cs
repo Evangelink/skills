@@ -1,3 +1,5 @@
+using YamlDotNet.Serialization;
+
 namespace SkillValidator.Shared;
 
 // --- MCP server definition (from plugin.json) ---
@@ -48,6 +50,12 @@ public sealed record SkillFrontmatter
     public string? Name { get; set; }
     public string? Description { get; set; }
     public string? Compatibility { get; set; }
+
+    // The frontmatter key is hyphenated (`disable-model-invocation`) and does not
+    // follow the underscore naming convention, so map it explicitly. A skill with
+    // this set to true is dropped from the Copilot CLI's model-facing skill menu.
+    [YamlMember(Alias = "disable-model-invocation", ApplyNamingConventions = false)]
+    public bool DisableModelInvocation { get; set; }
 }
 
 public sealed record AgentFrontmatter

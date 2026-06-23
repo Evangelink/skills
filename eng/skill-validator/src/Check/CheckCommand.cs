@@ -1,11 +1,10 @@
 using System.CommandLine;
 using System.Text.Json;
-using System.Text.RegularExpressions;
 using SkillValidator.Shared;
 
 namespace SkillValidator.Check;
 
-public static partial class CheckCommand
+public static class CheckCommand
 {
     private static readonly StringComparison s_pathComparison = OperatingSystem.IsWindows()
         ? StringComparison.OrdinalIgnoreCase
@@ -19,16 +18,10 @@ public static partial class CheckCommand
     // dropped from the Copilot CLI's model-facing skill menu and therefore does
     // not consume the skill-menu character budget tracked by
     // SkillProfiler.MaxAggregateDescriptionLength.
-    [GeneratedRegex(@"^\s*disable-model-invocation\s*:\s*true\s*(#.*)?$", RegexOptions.IgnoreCase | RegexOptions.Multiline)]
-    private static partial Regex DisableModelInvocationRegex();
-
     private static bool IsModelInvocationDisabled(string skillMdContent)
     {
-        var (yaml, _) = FrontmatterParser.SplitFrontmatter(skillMdContent);
-        if (yaml is null)
-            return false;
-
-        return DisableModelInvocationRegex().IsMatch(yaml);
+        var (metadata, _) = SkillDiscovery.ParseFrontmatter(skillMdContent);
+        return metadata.DisableModelInvocation;
     }
 
     public static Command Create()
