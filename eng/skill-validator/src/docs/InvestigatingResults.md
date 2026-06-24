@@ -238,7 +238,7 @@ Several scenario-level options in `eval.yaml` are relevant when diagnosing failu
 >   that should be discoverable. (They remain invocable by explicit name.)
 > - Reduce the plugin's aggregate skill-menu footprint so its model-invocable
 >   skills fit under the budget. The `check` command enforces this via
->   `SkillProfiler.MaxAggregateDescriptionLength` (15,000), summing each
+>   `SkillProfiler.MaxRenderedSkillMenuLength` (15,000), summing each
 >   model-invocable skill's **rendered `<skill>` block** (name + description +
 >   location + markup, via `SkillProfiler.RenderedSkillMenuCost`) — not just the
 >   raw description — and counting only skills *without*

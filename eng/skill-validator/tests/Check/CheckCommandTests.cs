@@ -69,13 +69,13 @@ public class CheckCommandAggregateDescriptionTests
     }
 
     [Fact]
-    public async Task DescriptionsSummingToLimit_Fail_BecauseRenderedOverheadIsCounted()
+    public async Task DescriptionsSummingToLimit_Fails_BecauseRenderedOverheadIsCounted()
     {
         // Descriptions ALONE sum to exactly the cap. The previous check (which
         // counted only Description.Length) treated this as "at limit → pass",
         // but the real CLI budget also includes each skill's name, location and
         // <skill> markup, so the rendered total exceeds the cap and must fail.
-        int limit = SkillProfiler.MaxAggregateDescriptionLength;
+        int limit = SkillProfiler.MaxRenderedSkillMenuLength;
         int perSkill = 1024;
         int skillCount = limit / perSkill;
         int remainder = limit - (skillCount * perSkill);
@@ -99,7 +99,7 @@ public class CheckCommandAggregateDescriptionTests
     [Fact]
     public async Task OverAggregateLimit_Fails()
     {
-        int limit = SkillProfiler.MaxAggregateDescriptionLength;
+        int limit = SkillProfiler.MaxRenderedSkillMenuLength;
         int perSkill = 1024;
         // Enough skills to exceed the aggregate limit
         int skillCount = (limit / perSkill) + 1;

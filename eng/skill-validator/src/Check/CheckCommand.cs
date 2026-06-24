@@ -17,7 +17,7 @@ public static class CheckCommand
     // A skill with `disable-model-invocation: true` in its frontmatter is
     // dropped from the Copilot CLI's model-facing skill menu and therefore does
     // not consume the skill-menu character budget tracked by
-    // SkillProfiler.MaxAggregateDescriptionLength.
+    // SkillProfiler.MaxRenderedSkillMenuLength.
     private static bool IsModelInvocationDisabled(string skillMdContent)
     {
         var (metadata, _) = SkillDiscovery.ParseFrontmatter(skillMdContent);
@@ -238,17 +238,17 @@ public static class CheckCommand
             // Skills hidden from the model-facing skill menu via
             // `disable-model-invocation: true` do not consume that budget, so
             // they are excluded from the aggregate (see
-            // SkillProfiler.MaxAggregateDescriptionLength).
+            // SkillProfiler.MaxRenderedSkillMenuLength).
             int totalChars = skills
                 .Where(s => !IsModelInvocationDisabled(s.SkillMdContent))
                 .Sum(SkillProfiler.RenderedSkillMenuCost);
-            if (totalChars <= SkillProfiler.MaxAggregateDescriptionLength)
+            if (totalChars <= SkillProfiler.MaxRenderedSkillMenuLength)
                 continue;
 
             var pluginResult = builder.Plugins.FirstOrDefault(p => string.Equals(p.DirectoryPath, pluginDirectoryPath, s_pathComparison));
             var pluginLabel = pluginResult?.Name
                 ?? Path.GetFileName(pluginDirectoryPath.TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar));
-            var message = $"Plugin '{pluginLabel}' rendered skill-menu size is {totalChars:N0} characters — maximum is {SkillProfiler.MaxAggregateDescriptionLength:N0}.";
+            var message = $"Plugin '{pluginLabel}' rendered skill-menu size is {totalChars:N0} characters — maximum is {SkillProfiler.MaxRenderedSkillMenuLength:N0}.";
             if (pluginResult is not null)
                 pluginResult.Errors.Add(message);
             else

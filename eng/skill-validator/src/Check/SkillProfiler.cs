@@ -67,7 +67,7 @@ public static partial class SkillProfiler
     //  * Skills marked `disable-model-invocation: true` are dropped from the
     //    CLI menu entirely and do not consume the budget; the aggregate below
     //    excludes them to match.
-    internal const int MaxAggregateDescriptionLength = 15_000;
+    internal const int MaxRenderedSkillMenuLength = 15_000;
     private const int MaxNameLength = 64;
     internal const int MinDescriptionLength = 10;
     private const int MaxCompatibilityLength = 500;
@@ -371,7 +371,7 @@ public static partial class SkillProfiler
     /// skill is emitted as an XML <c>&lt;skill&gt;</c> block — with XML-escaped
     /// name and description and a <c>&lt;location&gt;</c> label — followed by a
     /// newline separator. Counting the whole block (not just the description)
-    /// keeps <see cref="MaxAggregateDescriptionLength"/> a conservative proxy for
+    /// keeps <see cref="MaxRenderedSkillMenuLength"/> a conservative proxy for
     /// the real 15,000-char <c>SKILL_CHAR_BUDGET</c>, so a plugin that passes the
     /// aggregate check cannot silently overflow the menu and truncate
     /// alphabetically-later skills.
