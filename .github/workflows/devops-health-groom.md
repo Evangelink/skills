@@ -317,7 +317,9 @@ call `missing_tool` or `report_incomplete`, and do NOT treat it as a workflow
 failure. Hiding is best-effort cleanup; the weekly
 [`devops-health-cleanup.yml`](devops-health-cleanup.yml) workflow removes stale
 bot comments by age as a backstop, so a comment that cannot be hidden this run
-will still be cleaned up. Note the count of skipped comments in the Step 6 summary.
+will still be cleaned up. Track the count of skipped comments internally; include
+it in the Step 6 `noop` message **only** when that `noop` summary is emitted
+(i.e. when no `update-issue`/`hide-comment` calls were made — see Step 6).
 
 ### 5.6 Safety Limits
 
