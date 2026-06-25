@@ -20,7 +20,8 @@ public sealed record SkillInfo(
     string Path,
     string SkillMdPath,
     string SkillMdContent,
-    string? Compatibility = null);
+    string? Compatibility = null,
+    bool DisableModelInvocation = false);
 
 // --- Agent info ---
 

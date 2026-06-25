@@ -32,7 +32,8 @@ public static partial class SkillProfiler
     // vocabularies, but BPE counts are close enough across models for complexity classification.
     private static readonly Lazy<TiktokenTokenizer> s_bpeTokenizer = new(() => TiktokenTokenizer.CreateForModel("gpt-4"));
 
-    // Per-plugin aggregate description size cap. This mirrors a REAL GitHub
+    // Per-plugin rendered skill-menu budget (NOT a raw description-length sum —
+    // see RenderedSkillMenuCost and the notes below). This mirrors a REAL GitHub
     // Copilot CLI constraint: the CLI renders the model-facing
     // <available_skills> list under a hard character budget of 15,000
     // (the agent SDK's SKILL_CHAR_BUDGET, default 15e3 — confirmed in CLI
@@ -40,7 +41,7 @@ public static partial class SkillProfiler
     // WITH their full <description> only until that budget is exhausted; every
     // skill past the cut-off collapses to a bare name with NO description and
     // therefore can no longer be reliably model-activated. So once a plugin's
-    // aggregate description footprint approaches ~15K, its alphabetically-later
+    // rendered skill-menu footprint approaches ~15K, its alphabetically-later
     // skills silently lose their descriptions — and their discoverability — in
     // plugin / marketplace contexts. (This is exactly why dotnet-test's
     // `run-tests` and `test-*` skills stopped activating in plugin eval runs.)

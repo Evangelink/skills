@@ -17,12 +17,8 @@ public static class CheckCommand
     // A skill with `disable-model-invocation: true` in its frontmatter is
     // dropped from the Copilot CLI's model-facing skill menu and therefore does
     // not consume the skill-menu character budget tracked by
-    // SkillProfiler.MaxRenderedSkillMenuLength.
-    private static bool IsModelInvocationDisabled(string skillMdContent)
-    {
-        var (metadata, _) = SkillDiscovery.ParseFrontmatter(skillMdContent);
-        return metadata.DisableModelInvocation;
-    }
+    // SkillProfiler.MaxRenderedSkillMenuLength. The flag is parsed once during
+    // discovery and surfaced on SkillInfo.DisableModelInvocation.
 
     public static Command Create()
     {
@@ -240,7 +236,7 @@ public static class CheckCommand
             // they are excluded from the aggregate (see
             // SkillProfiler.MaxRenderedSkillMenuLength).
             int totalChars = skills
-                .Where(s => !IsModelInvocationDisabled(s.SkillMdContent))
+                .Where(s => !s.DisableModelInvocation)
                 .Sum(SkillProfiler.RenderedSkillMenuCost);
             if (totalChars <= SkillProfiler.MaxRenderedSkillMenuLength)
                 continue;
